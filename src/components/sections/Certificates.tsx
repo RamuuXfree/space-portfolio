@@ -1,17 +1,35 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { certificates, achievements } from '../../data/certificates';
 import StarField from '../background/StarField';
 import NebulaBackground from '../background/NebulaBackground';
 import { ExternalLink } from 'lucide-react';
-import CountUp from 'react-countup';
 
-// Animated orbit for certificates section
+function StatCounter({ end, duration = 2.5, suffix = '' }: { end: number; duration?: number; suffix?: string }) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    let frame: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / (duration * 1000), 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * end));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [end, duration]);
+
+  return <>{value.toLocaleString()}{suffix}</>;
+}
+
 function OrbitDecoration() {
   return (
     <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 hidden lg:block">
       {[120, 180, 240].map((size, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute rounded-full"
           style={{
@@ -22,8 +40,6 @@ function OrbitDecoration() {
             transform: 'translateY(-50%)',
             border: `1px solid rgba(6,182,212,${0.4 - i * 0.1})`,
           }}
-          animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-          transition={{ duration: 10 + i * 5, repeat: Infinity, ease: 'linear' }}
         />
       ))}
     </div>
@@ -45,28 +61,20 @@ export default function Certificates() {
 
       <div className="container-custom relative z-10" ref={ref}>
         {/* Header */}
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-        >
+        <div className="text-center mb-16">
           <p className="font-secondary text-sm text-accent-cyan tracking-widest uppercase mb-4">Credentials</p>
           <h2 className="font-heading font-bold text-4xl md:text-5xl text-white mb-4">
             Certificates & <span className="gradient-text">Achievements</span>
           </h2>
           <div className="w-24 h-px mx-auto" style={{ background: 'linear-gradient(90deg,transparent,#06B6D4,transparent)' }} />
-        </motion.div>
+        </div>
 
         {/* Certificates grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
-          {certificates.map((cert, i) => (
-            <motion.div
+          {certificates.map((cert) => (
+            <div
               key={cert.id}
               className="glass-card p-6 group relative overflow-hidden"
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -5, boxShadow: `0 0 30px ${cert.color}25` }}
             >
               {/* Top accent */}
               <div
@@ -119,32 +127,23 @@ export default function Certificates() {
                   Verify Certificate
                 </a>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Achievements counters */}
         <div id="achievements">
-          <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.4 }}
-          >
+          <div className="text-center mb-12">
             <h3 className="font-heading font-bold text-3xl md:text-4xl text-white">
               Numbers That <span className="gradient-text">Define</span> Me
             </h3>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {achievements.map((ach, i) => (
-              <motion.div
+              <div
                 key={i}
                 className="glass-card p-6 text-center group relative overflow-hidden"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={inView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ delay: i * 0.08 + 0.5 }}
-                whileHover={{ y: -5, boxShadow: `0 0 30px ${ach.color}25` }}
               >
                 <div
                   className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -157,12 +156,12 @@ export default function Certificates() {
                   style={{ color: ach.color }}
                 >
                   {inView ? (
-                    <CountUp end={ach.value} duration={2.5} separator="," suffix={ach.suffix} />
+                    <StatCounter end={ach.value} duration={2.5} suffix={ach.suffix} />
                   ) : '0'}
                 </div>
                 <p className="font-heading font-semibold text-white text-xs mb-1">{ach.title}</p>
                 <p className="font-secondary text-xs text-white/30">{ach.sub}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

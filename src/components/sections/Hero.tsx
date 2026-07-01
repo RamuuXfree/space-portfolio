@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Mail, Download, ChevronDown } from 'lucide-react';
@@ -6,7 +6,6 @@ import { FiGithub, FiLinkedin, FiTwitter, FiMail } from 'react-icons/fi';
 import { personalInfo, stats } from '../../data/personal';
 import StarField from '../background/StarField';
 import NebulaBackground from '../background/NebulaBackground';
-import CountUp from 'react-countup';
 
 const ROLES = ['AI Engineer', 'Full Stack Developer', 'ML Engineer', 'Open Source Contributor', 'Creative Technologist'];
 
@@ -48,13 +47,27 @@ function Typewriter({ texts }: { texts: string[] }) {
   );
 }
 
-// FIX: Store the actual component, not an object with properties
-const SOCIALS = [
-  { href: 'https://github.com',   Icon: FiGithub,   color: '#fff',     label: 'GitHub' },
-  { href: 'https://linkedin.com', Icon: FiLinkedin,  color: '#0077B5',  label: 'LinkedIn' },
-  { href: 'https://twitter.com',  Icon: FiTwitter,   color: '#1DA1F2',  label: 'Twitter' },
-  { href: 'mailto:alex@nova.dev', Icon: FiMail,      color: '#06B6D4',  label: 'Email' },
-];
+// Self-contained counter — replaces react-countup, which has a broken
+// default-export interop under this Vite/CJS setup (was throwing
+// "Element type is invalid ... got: object" the moment it mounted on scroll).
+function StatCounter({ end, duration = 2.5, suffix = '' }: { end: number; duration?: number; suffix?: string }) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    let frame: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / (duration * 1000), 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * end));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [end, duration]);
+
+  return <>{value.toLocaleString()}{suffix}</>;
+}
 
 const TECH = ['⚛️', '🐍', '🧠', '☁️', '🔥', '▲'];
 
@@ -67,13 +80,11 @@ function Orbit() {
         className="relative"
         style={{ width: 240, height: 240 }}
       >
-        {/* Glow */}
         <div className="absolute inset-0 rounded-full" style={{
           background: 'radial-gradient(circle, rgba(6,182,212,0.25) 0%, transparent 70%)',
           filter: 'blur(30px)', transform: 'scale(1.6)',
         }} />
 
-        {/* Profile sphere */}
         <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{
           background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(139,92,246,0.15))',
           border: '1px solid rgba(6,182,212,0.3)',
@@ -88,7 +99,6 @@ function Orbit() {
           </div>
         </div>
 
-        {/* Orbit rings */}
         {[290, 340, 395].map((sz, i) => (
           <motion.div key={i} className="absolute rounded-full" style={{
             width: sz, height: sz,
@@ -101,7 +111,6 @@ function Orbit() {
           />
         ))}
 
-        {/* Orbiting tech icons */}
         {[
           { emoji: TECH[0], r: 145, dur: 8,  delay: 0 },
           { emoji: TECH[1], r: 145, dur: 8,  delay: 2.7 },
@@ -143,18 +152,15 @@ export default function Hero() {
       <StarField count={220} speed={0.2} />
       <NebulaBackground variant="hero" />
 
-      {/* Main */}
       <div className="container-custom flex-1 flex items-center relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center w-full pt-24 pb-10">
 
-          {/* LEFT */}
           <motion.div
             className="flex flex-col gap-5"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
           >
-            {/* Badge */}
             <motion.div
               className="glass inline-flex items-center gap-2 px-4 py-2 w-fit rounded-full"
               initial={{ opacity: 0, y: -20 }}
@@ -165,7 +171,6 @@ export default function Hero() {
               <span className="font-secondary text-xs text-green-400 tracking-widest uppercase">Available for Hire</span>
             </motion.div>
 
-            {/* Greeting + Name */}
             <div>
               <motion.p
                 className="font-signature italic text-2xl text-white/40 mb-1"
@@ -191,7 +196,6 @@ export default function Hero() {
               </motion.div>
             </div>
 
-            {/* Bio */}
             <motion.p
               className="font-body text-white/55 text-base leading-relaxed max-w-lg"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}
@@ -199,7 +203,6 @@ export default function Hero() {
               {personalInfo.bio}
             </motion.p>
 
-            {/* CTAs */}
             <motion.div
               className="flex flex-wrap gap-3 items-center"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }}
@@ -229,34 +232,56 @@ export default function Hero() {
               </motion.button>
             </motion.div>
 
-            {/* Socials - FIX: Render icon components correctly */}
             <motion.div
               className="flex items-center gap-4"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
             >
               <span className="font-secondary text-xs text-white/30 tracking-widest uppercase">Follow</span>
               <div className="h-px w-8 bg-white/15" />
-              {SOCIALS.map((s, i) => {
-                // Create the icon component instance
-                const IconComponent = s.Icon;
-                return (
-                  <motion.a 
-                    key={i} 
-                    href={s.href} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    aria-label={s.label}
-                    className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
-                    whileHover={{ scale: 1.2, boxShadow: `0 0 15px ${s.color}50` }}
-                  >
-                    <IconComponent size={17} />
-                  </motion.a>
-                );
-              })}
+
+              <motion.a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
+                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #fff50' }}
+              >
+                <FiGithub size={17} />
+              </motion.a>
+              <motion.a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
+                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #0077B550' }}
+              >
+                <FiLinkedin size={17} />
+              </motion.a>
+              <motion.a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Twitter"
+                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
+                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #1DA1F250' }}
+              >
+                <FiTwitter size={17} />
+              </motion.a>
+              <motion.a
+                href="mailto:alex@nova.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Email"
+                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
+                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #06B6D450' }}
+              >
+                <FiMail size={17} />
+              </motion.a>
             </motion.div>
           </motion.div>
 
-          {/* RIGHT: orbit */}
           <motion.div
             className="relative h-80 md:h-[460px] flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.85 }}
@@ -268,7 +293,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="relative z-10 border-t border-white/[0.04]" ref={ref}>
         <div className="container-custom py-7">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -282,7 +306,7 @@ export default function Hero() {
                 whileHover={{ y: -4, boxShadow: '0 0 30px rgba(6,182,212,0.12)' }}
               >
                 <div className="font-heading font-bold text-2xl gradient-text-cyan mb-0.5">
-                  {inView ? <CountUp end={s.value} duration={2.5} separator="," suffix={s.suffix} /> : '0'}
+                  {inView ? <StatCounter end={s.value} duration={2.5} suffix={s.suffix} /> : '0'}
                 </div>
                 <div className="font-secondary text-xs text-white/40 leading-tight">{s.label}</div>
               </motion.div>
@@ -291,7 +315,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll cue */}
       <motion.button
         className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 text-white/30 hover:text-accent-cyan transition-colors"
         animate={{ y: [0, 8, 0] }}

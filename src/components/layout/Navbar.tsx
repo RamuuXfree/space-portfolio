@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { navLinks } from '../../data/navigation';
-import { useCosmicAtmosphere } from '../../context/CosmicAtmosphereContext';
+import { useCosmicAtmosphere } from '../../hooks/useCosmicAtmosphere';
 
 function scrollTo(href: string) {
   document.getElementById(href.replace('#', ''))?.scrollIntoView({ behavior: 'smooth' });

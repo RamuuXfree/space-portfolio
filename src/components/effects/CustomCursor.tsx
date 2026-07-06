@@ -1,42 +1,43 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const [hover, setHover] = useState(false);
-  const [click, setClick] = useState(false);
+  const hoverRef = useRef(false);
   const pos = useRef({ x: -100, y: -100 });
   const ring = useRef({ x: -100, y: -100 });
-  const raf = useRef<number>(0);
+  const raf = useRef(0);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
+    if (reduced) return;
+
     const onMove = (e: MouseEvent) => {
       pos.current = { x: e.clientX, y: e.clientY };
     };
-    const onDown = () => setClick(true);
-    const onUp = () => setClick(false);
     const onOver = (e: MouseEvent) => {
       const el = e.target as Element;
-      setHover(!!el.closest('a, button, [role="button"], input, textarea, [data-hover]'));
+      hoverRef.current = !!el.closest('a, button, [role="button"], input, textarea');
     };
 
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-    window.addEventListener('mouseover', onOver);
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mouseover', onOver, { passive: true });
 
     const animate = () => {
+      const hover = hoverRef.current;
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${pos.current.x - 4}px, ${pos.current.y - 4}px)`;
+        dotRef.current.style.transform = `translate3d(${pos.current.x - 3}px, ${pos.current.y - 3}px, 0)`;
+        dotRef.current.style.background = hover ? '#7C6AE8' : 'rgba(255,255,255,0.9)';
       }
-      ring.current.x += (pos.current.x - ring.current.x) * 0.12;
-      ring.current.y += (pos.current.y - ring.current.y) * 0.12;
+      ring.current.x += (pos.current.x - ring.current.x) * 0.14;
+      ring.current.y += (pos.current.y - ring.current.y) * 0.14;
       if (ringRef.current) {
-        const sz = hover ? 44 : click ? 20 : 32;
-        ringRef.current.style.transform = `translate(${ring.current.x - sz / 2}px, ${ring.current.y - sz / 2}px)`;
+        const sz = hover ? 40 : 28;
+        ringRef.current.style.transform = `translate3d(${ring.current.x - sz / 2}px, ${ring.current.y - sz / 2}px, 0)`;
         ringRef.current.style.width = `${sz}px`;
         ringRef.current.style.height = `${sz}px`;
+        ringRef.current.style.borderColor = hover ? 'rgba(124,106,232,0.5)' : 'rgba(255,255,255,0.2)';
       }
       raf.current = requestAnimationFrame(animate);
     };
@@ -44,38 +45,24 @@ export default function CustomCursor() {
 
     return () => {
       window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('mouseup', onUp);
       window.removeEventListener('mouseover', onOver);
       cancelAnimationFrame(raf.current);
     };
-  }, [hover, click]);
+  }, [reduced]);
+
+  if (reduced) return null;
 
   return (
     <>
-      {/* Inner dot */}
       <div
         ref={dotRef}
-        style={{
-          position: 'fixed', top: 0, left: 0,
-          width: 8, height: 8, borderRadius: '50%',
-          background: hover ? '#A855F7' : '#06B6D4',
-          boxShadow: hover ? '0 0 10px #A855F7' : '0 0 10px #06B6D4',
-          zIndex: 99999, pointerEvents: 'none',
-          transition: 'background 0.2s, box-shadow 0.2s',
-        }}
+        className="fixed top-0 left-0 w-1.5 h-1.5 rounded-full pointer-events-none z-[99999]"
+        style={{ boxShadow: '0 0 6px rgba(255,255,255,0.4)' }}
       />
-      {/* Outer ring */}
       <div
         ref={ringRef}
-        style={{
-          position: 'fixed', top: 0, left: 0,
-          border: hover ? '1.5px solid #A855F7' : '1.5px solid rgba(6,182,212,0.7)',
-          borderRadius: '50%',
-          zIndex: 99998, pointerEvents: 'none',
-          boxShadow: hover ? '0 0 15px rgba(168,85,247,0.5)' : '0 0 10px rgba(6,182,212,0.3)',
-          transition: 'border-color 0.2s, box-shadow 0.2s',
-        }}
+        className="fixed top-0 left-0 rounded-full pointer-events-none z-[99998]"
+        style={{ border: '1px solid rgba(255,255,255,0.2)' }}
       />
     </>
   );

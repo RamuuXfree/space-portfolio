@@ -1,328 +1,99 @@
-import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { Mail, Download, ChevronDown } from 'lucide-react';
-import { FiGithub, FiLinkedin, FiTwitter, FiMail } from 'react-icons/fi';
-import { personalInfo, stats } from '../../data/personal';
-import StarField from '../background/StarField';
-import NebulaBackground from '../background/NebulaBackground';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import { personalInfo } from '../../data/personal';
 
-const ROLES = ['AI Engineer', 'Full Stack Developer', 'ML Engineer', 'Open Source Contributor', 'Creative Technologist'];
-
-function Typewriter({ texts }: { texts: string[] }) {
-  const [display, setDisplay] = useState('');
-  const [idx, setIdx] = useState(0);
-  const [del, setDel] = useState(false);
-  const [char, setChar] = useState(0);
-
-  useEffect(() => {
-    const full = texts[idx];
-    const spd = del ? 40 : 85;
-    const t = setTimeout(() => {
-      if (!del) {
-        if (char < full.length) {
-          setDisplay(full.slice(0, char + 1));
-          setChar(c => c + 1);
-        } else {
-          setTimeout(() => setDel(true), 1800);
-        }
-      } else {
-        if (char > 0) {
-          setDisplay(full.slice(0, char - 1));
-          setChar(c => c - 1);
-        } else {
-          setDel(false);
-          setIdx(i => (i + 1) % texts.length);
-        }
-      }
-    }, spd);
-    return () => clearTimeout(t);
-  }, [char, idx, del, texts]);
-
-  return (
-    <span>
-      <span className="gradient-text">{display}</span>
-      <span className="animate-blink" style={{ color: '#06B6D4' }}>|</span>
-    </span>
-  );
+function scrollTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 }
 
-// Self-contained counter — replaces react-countup, which has a broken
-// default-export interop under this Vite/CJS setup (was throwing
-// "Element type is invalid ... got: object" the moment it mounted on scroll).
-function StatCounter({ end, duration = 2.5, suffix = '' }: { end: number; duration?: number; suffix?: string }) {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    let frame: number;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / (duration * 1000), 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(eased * end));
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [end, duration]);
-
-  return <>{value.toLocaleString()}{suffix}</>;
-}
-
-const TECH = ['⚛️', '🐍', '🧠', '☁️', '🔥', '▲'];
-
-function Orbit() {
-  return (
-    <div className="relative w-full h-full flex items-center justify-center select-none">
-      <motion.div
-        animate={{ y: [0, -12, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        className="relative"
-        style={{ width: 240, height: 240 }}
-      >
-        <div className="absolute inset-0 rounded-full" style={{
-          background: 'radial-gradient(circle, rgba(6,182,212,0.25) 0%, transparent 70%)',
-          filter: 'blur(30px)', transform: 'scale(1.6)',
-        }} />
-
-        <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(139,92,246,0.15))',
-          border: '1px solid rgba(6,182,212,0.3)',
-          boxShadow: '0 0 60px rgba(6,182,212,0.35), 0 0 120px rgba(139,92,246,0.15), inset 0 0 40px rgba(6,182,212,0.08)',
-        }}>
-          <div className="text-center">
-            <div className="font-signature italic text-6xl leading-none" style={{
-              background: 'linear-gradient(135deg, #06B6D4, #8B5CF6)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>AN</div>
-            <div className="font-secondary text-xs text-white/40 tracking-widest mt-1">ALEX NOVA</div>
-          </div>
-        </div>
-
-        {[290, 340, 395].map((sz, i) => (
-          <motion.div key={i} className="absolute rounded-full" style={{
-            width: sz, height: sz,
-            left: '50%', top: '50%',
-            transform: 'translate(-50%, -50%)',
-            border: `1px solid rgba(${i === 0 ? '6,182,212' : i === 1 ? '59,130,246' : '139,92,246'},${0.25 - i * 0.06})`,
-          }}
-            animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-            transition={{ duration: 16 + i * 5, repeat: Infinity, ease: 'linear' }}
-          />
-        ))}
-
-        {[
-          { emoji: TECH[0], r: 145, dur: 8,  delay: 0 },
-          { emoji: TECH[1], r: 145, dur: 8,  delay: 2.7 },
-          { emoji: TECH[2], r: 145, dur: 8,  delay: 5.4 },
-          { emoji: TECH[3], r: 197, dur: 13, delay: 0 },
-          { emoji: TECH[4], r: 197, dur: 13, delay: 4.3 },
-          { emoji: TECH[5], r: 197, dur: 13, delay: 8.6 },
-        ].map((item, i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            style={{ left: '50%', top: '50%', width: 0, height: 0 }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: item.dur, repeat: Infinity, ease: 'linear', delay: item.delay }}
-          >
-            <div className="glass-card absolute flex items-center justify-center" style={{
-              width: 34, height: 34,
-              left: item.r - 17, top: -17,
-              borderRadius: 9, fontSize: 14,
-            }}>
-              {item.emoji}
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    </div>
-  );
-}
+const nameSpring = { type: 'spring' as const, stiffness: 75, damping: 22, mass: 0.85 };
 
 export default function Hero() {
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
-
   return (
-    <section
-      id="home"
-      className="relative min-h-screen flex flex-col overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #050816 0%, #0B1120 100%)' }}
-    >
-      <StarField count={220} speed={0.2} />
-      <NebulaBackground variant="hero" />
-
-      <div className="container-custom flex-1 flex items-center relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center w-full pt-24 pb-10">
-
-          <motion.div
-            className="flex flex-col gap-5"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+    <section id="home" className="relative min-h-[100dvh] flex flex-col">
+      <div className="container-custom flex-1 flex items-center pt-28 pb-20">
+        <div className="max-w-4xl">
+          <motion.p
+            className="font-secondary text-[11px] tracking-[0.28em] uppercase text-white/40 mb-6 md:mb-8"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           >
+            Hi, I&apos;m
+          </motion.p>
+
+          <div className="relative mb-5 md:mb-6">
             <motion.div
-              className="glass inline-flex items-center gap-2 px-4 py-2 w-fit rounded-full"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              className="hero-name-glow"
+              aria-hidden="true"
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ ...nameSpring, delay: 0.18 }}
+            />
+            <motion.h1
+              className="hero-name font-heading font-medium leading-[1.02] tracking-[-0.03em]"
+              initial={{ opacity: 0, y: 36, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ ...nameSpring, delay: 0.2 }}
             >
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="font-secondary text-xs text-green-400 tracking-widest uppercase">Available for Hire</span>
-            </motion.div>
-
-            <div>
-              <motion.p
-                className="font-signature italic text-2xl text-white/40 mb-1"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-              >
-                Hello, World! I'm
-              </motion.p>
-              <motion.h1
-                className="font-heading font-bold leading-none mb-3"
-                style={{ fontSize: 'clamp(2.8rem, 7vw, 5.5rem)' }}
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-              >
-                <span style={{ background:'linear-gradient(135deg,#fff,rgba(255,255,255,0.8))', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-                  Alex
-                </span>{' '}
-                <span className="gradient-text">Nova</span>
-              </motion.h1>
-              <motion.div
-                className="font-secondary font-semibold text-xl md:text-2xl h-9 flex items-center"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
-              >
-                <Typewriter texts={ROLES} />
-              </motion.div>
-            </div>
-
-            <motion.p
-              className="font-body text-white/55 text-base leading-relaxed max-w-lg"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}
-            >
-              {personalInfo.bio}
-            </motion.p>
-
-            <motion.div
-              className="flex flex-wrap gap-3 items-center"
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }}
-            >
-              <motion.button
-                className="btn-primary text-white gap-2"
-                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
-                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                <Mail size={14} />
-                Hire Me
-              </motion.button>
-              <motion.a
-                href="#"
-                className="btn-outline gap-2"
-                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
-              >
-                <Download size={14} />
-                Resume
-              </motion.a>
-              <motion.button
-                className="font-button text-sm text-white/50 hover:text-white transition-colors"
-                whileHover={{ x: 4 }}
-                onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                View Projects →
-              </motion.button>
-            </motion.div>
-
-            <motion.div
-              className="flex items-center gap-4"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
-            >
-              <span className="font-secondary text-xs text-white/30 tracking-widest uppercase">Follow</span>
-              <div className="h-px w-8 bg-white/15" />
-
-              <motion.a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GitHub"
-                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
-                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #fff50' }}
-              >
-                <FiGithub size={17} />
-              </motion.a>
-              <motion.a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
-                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
-                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #0077B550' }}
-              >
-                <FiLinkedin size={17} />
-              </motion.a>
-              <motion.a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Twitter"
-                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
-                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #1DA1F250' }}
-              >
-                <FiTwitter size={17} />
-              </motion.a>
-              <motion.a
-                href="mailto:alex@nova.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Email"
-                className="glass p-2 rounded-xl text-white/50 hover:text-white transition-colors"
-                whileHover={{ scale: 1.2, boxShadow: '0 0 15px #06B6D450' }}
-              >
-                <FiMail size={17} />
-              </motion.a>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            className="relative h-80 md:h-[460px] flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }}
-          >
-            <Orbit />
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="relative z-10 border-t border-white/[0.04]" ref={ref}>
-        <div className="container-custom py-7">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {stats.map((s, i) => (
-              <motion.div
-                key={i}
-                className="glass-card p-4 text-center"
-                initial={{ opacity: 0, y: 30 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: i * 0.08 + 1.4 }}
-                whileHover={{ y: -4, boxShadow: '0 0 30px rgba(6,182,212,0.12)' }}
-              >
-                <div className="font-heading font-bold text-2xl gradient-text-cyan mb-0.5">
-                  {inView ? <StatCounter end={s.value} duration={2.5} suffix={s.suffix} /> : '0'}
-                </div>
-                <div className="font-secondary text-xs text-white/40 leading-tight">{s.label}</div>
-              </motion.div>
-            ))}
+              <span className="hero-name-text">{personalInfo.fullName}</span>
+            </motion.h1>
           </div>
+
+          <motion.p
+            className="font-secondary text-sm md:text-base tracking-[0.04em] text-white/62 mb-6 md:mb-8"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {personalInfo.tagline}
+          </motion.p>
+
+          <motion.p
+            className="font-body text-white/48 text-base md:text-[1.05rem] leading-relaxed max-w-xl mb-10 md:mb-12"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.5 }}
+          >
+            {personalInfo.description}
+          </motion.p>
+
+          <motion.div
+            className="flex flex-wrap items-center gap-3"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, delay: 0.62 }}
+          >
+            <motion.button
+              className="btn-primary text-white gap-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => scrollTo('project')}
+            >
+              View Projects
+              <ArrowRight size={14} />
+            </motion.button>
+            <motion.button
+              className="btn-outline"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => scrollTo('contact')}
+            >
+              Contact
+            </motion.button>
+          </motion.div>
         </div>
       </div>
 
       <motion.button
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 text-white/30 hover:text-accent-cyan transition-colors"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+        className="mx-auto mb-10 flex flex-col items-center gap-2 text-white/25 hover:text-white/50 transition-colors"
+        animate={{ y: [0, 5, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        onClick={() => scrollTo('about')}
+        aria-label="Scroll to about"
       >
-        <span className="font-secondary text-xs tracking-widest uppercase">Scroll</span>
-        <ChevronDown size={15} />
+        <span className="font-secondary text-[9px] tracking-[0.3em] uppercase">Scroll</span>
+        <ChevronDown size={13} />
       </motion.button>
     </section>
   );

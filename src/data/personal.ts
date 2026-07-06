@@ -1,25 +1,20 @@
 export const personalInfo = {
-  name: 'Alex Nova',
-  title: 'AI Engineer & Full Stack Developer',
-  email: 'alex@nova.dev',
-  phone: '+1 (555) 000-1234',
-  location: 'New York, USA',
-  availability: 'Open to Opportunities',
-  bio: 'I craft intelligent systems that bridge the gap between cutting-edge AI research and real-world impact. Passionate about building products that are both technically excellent and beautifully designed.',
+  firstName: 'Ramoo',
+  fullName: 'Ramoo Kachhee',
+  tagline: 'AI/ML Student & Full Stack Developer',
+  email: 'ramookachhee@gmail.com',
+  description:
+    'A developer focused on building meaningful products, contributing to real-world software, and continuously improving through hands-on development experience.',
+  about: [
+    'I build software with a focus on products that solve real problems — from education platforms to community services and institutional systems.',
+    'My work spans open source collaboration on HyperLearningTech, full stack applications like College Management System, and platform thinking with Local Sathi.',
+    'I believe good development is grounded in contribution: thoughtful interfaces, clear architecture, and code that earns trust through consistency rather than spectacle.',
+  ],
 };
 
 export const socialLinks = {
-  github:   'https://github.com',
-  linkedin: 'https://linkedin.com',
-  twitter:  'https://twitter.com',
-  email:    'mailto:alex@nova.dev',
+  github: 'https://github.com/RamuuXfree',
+  linkedin: 'https://www.linkedin.com/in/ramoo-kachhee-9b1616405/',
+  email: 'mailto:ramookachhee@gmail.com',
+  resume: '', // TODO: Add resume PDF URL when available
 };
-
-export const stats = [
-  { value: 50,   suffix: '+', label: 'Projects Delivered' },
-  { value: 5,    suffix: '+', label: 'Years Experience' },
-  { value: 2847, suffix: '',  label: 'GitHub Contributions' },
-  { value: 15,   suffix: '+', label: 'Open Source Repos' },
-  { value: 98,   suffix: '%', label: 'Client Satisfaction' },
-  { value: 12,   suffix: '+', label: 'Certifications' },
-];
